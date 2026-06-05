@@ -25,11 +25,19 @@ The `-r 1` setting is required for the current code path because `-r 2` downsamp
 
 ## Overall Metrics
 
+Baseline:
+
 | Scene | Status | Mean IoU | Boundary Mean IoU | Main Weak Category |
 | --- | --- | ---: | ---: | --- |
 | figurines | complete | 0.7630 | 0.7427 | rubber duck with red hat |
 | ramen | complete | 0.7620 | 0.6805 | wavy noodles in bowl |
 | teatime | complete | 0.6672 | 0.6365 | spoon handle; cookies on a plate |
+
+Enhancement experiments:
+
+| Scene | Experiment | Mean IoU | Boundary Mean IoU | Main Observation |
+| --- | --- | ---: | ---: | --- |
+| teatime | densify1500_7000 | 0.7108 | 0.6768 | improves overall score, but spoon handle remains 0.0 |
 
 ## Figurines
 
@@ -91,6 +99,44 @@ Observation:
 
 One command output showed `find result/lerf_mask/teatime -type f | wc -l` as `0`, while evaluation still loaded masks and produced valid IoU. As with `ramen`, repeat path checks before final packaging, but the metric output confirms that evaluation read prediction masks.
 
+### Teatime Densify1500 Enhancement
+
+Config:
+
+```text
+configs/gaussian_grouping/train_12gb_densify1500.json
+iterations: 7000
+densify_until_iter: 1500
+reg3d_max_points: 50000
+reg3d_sample_size: 256
+```
+
+Result:
+
+```text
+Overall Mean IoU: 0.7108
+Overall Boundary Mean IoU: 0.6768
+```
+
+Per-class changes compared with baseline:
+
+| Class | Baseline IoU | Densify1500 IoU | Change |
+| --- | ---: | ---: | ---: |
+| spoon handle | 0.0000 | 0.0000 | +0.0000 |
+| sheep | 0.6359 | 0.9547 | +0.3188 |
+| coffee mug | 0.8510 | 0.8493 | -0.0017 |
+| stuffed bear | 0.6426 | 0.6439 | +0.0013 |
+| plate | 0.8712 | 0.8684 | -0.0027 |
+| paper napkin | 0.8271 | 0.8119 | -0.0152 |
+| cookies on a plate | 0.2229 | 0.2223 | -0.0006 |
+| bag of cookies | 0.9479 | 0.9464 | -0.0015 |
+| tea in a glass | 0.7681 | 0.9007 | +0.1327 |
+| apple | 0.9050 | 0.9103 | +0.0053 |
+
+Interpretation:
+
+Increasing densification improved overall quality, mainly through `sheep` and `tea in a glass`. It did not solve the hardest categories: `spoon handle` stayed at `0.0000`, and `cookies on a plate` stayed around `0.22`. This suggests those failures are likely caused by prompt/mask localization or semantic entanglement rather than only insufficient Gaussian density.
+
 ## Current Interpretation
 
 The three completed scenes support the same conclusion:
@@ -99,11 +145,11 @@ The three completed scenes support the same conclusion:
 The low-memory 12GB configuration is valid for reproducing LERF-MASK segmentation, but thin, small, partially visible, or semantically entangled objects are weak cases.
 ```
 
-The current baseline is strong enough for method reproduction: all three required public scenes train, render text-prompt masks, and produce IoU/Boundary-IoU metrics. The next step is parameter tuning on a representative failure case instead of changing the baseline for every scene.
+The current baseline is strong enough for method reproduction: all three required public scenes train, render text-prompt masks, and produce IoU/Boundary-IoU metrics. The `teatime_densify1500_7000` enhancement shows that controlled densification can improve overall metrics under the 12GB budget, but the hardest failure categories likely need prompt or mask-selection tuning.
 
 ## Next Step
 
-Tune one representative failure case. Recommended starting point:
+Inspect and tune one representative failure case. Recommended starting point:
 
 ```text
 Scene: teatime
@@ -111,13 +157,13 @@ Failure target: spoon handle or cookies on a plate
 Reason: weakest overall scene and clear object-level failure modes
 ```
 
-Candidate tuning directions:
+Candidate next directions:
 
 ```text
-1. Increase densify_until_iter from 1000 to 1500 if memory permits.
-2. Keep iterations at 7000 first, then try 10000 only if memory remains stable.
-3. Reduce reg3d_sample_size or reg3d_max_points if more densification causes OOM.
-4. Inspect rendered prompt masks before tuning to separate GroundingDINO/SAM failures from 3D grouping failures.
+1. Keep baseline and densify1500 as separate recorded experiments.
+2. Inspect spoon handle and cookies on a plate masks.
+3. Try prompt/mask tuning for spoon handle and cookies.
+4. Only try densify_until_iter=2000 if the qualitative masks look correct but boundaries remain rough.
 ```
 
 Do not replace the three-scene baseline results. Treat tuning as a separate enhancement experiment.

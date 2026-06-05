@@ -71,8 +71,19 @@ Large files stay out of Git. Git tracks scripts, configs, notes, and report file
 
 5. Contribution
    - Tune mask filtering or segmentation parameters after the three-scene baseline is complete.
+   - `teatime_densify1500` completed: Mean IoU 0.7108, Boundary Mean IoU 0.6768.
    - Compare before/after outputs qualitatively.
    - Record failure cases.
+
+## Immediate Plan
+
+1. Keep the three-scene baseline fixed and documented.
+2. Keep `teatime_densify1500` as the first parameter enhancement.
+3. Export and inspect weak-category masks for `spoon handle`, `cookies on a plate`, `wavy noodles in bowl`, and `rubber duck with red hat`.
+4. If weak masks are empty or target the wrong object, run prompt/mask tuning instead of more densification.
+5. If weak masks are qualitatively correct but boundaries are rough, try `densify2000_7000` as a separate experiment.
+6. Start downstream editing with a strong object class, not a failure class.
+7. Begin custom-data validation after public-data reproduction and one editing demo are stable.
 
 6. Report
    - Environment and commands.

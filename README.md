@@ -64,6 +64,8 @@ git clone --recursive https://github.com/lkeab/gaussian-grouping third_party/gau
 Follow the full project reproduction guide:
 
 - [docs/reproduction.md](docs/reproduction.md)
+- [docs/experiment_protocol.md](docs/experiment_protocol.md)
+- [docs/next_steps.md](docs/next_steps.md)
 - [docs/parameters.md](docs/parameters.md)
 - [docs/lerf_mask_results.md](docs/lerf_mask_results.md)
 - [docs/bottleneck_analysis.md](docs/bottleneck_analysis.md)
@@ -119,6 +121,12 @@ ramen      Mean IoU: 0.7620  Boundary IoU: 0.6805
 teatime    Mean IoU: 0.6672  Boundary IoU: 0.6365
 ```
 
+Enhancement result:
+
+```text
+teatime_densify1500  Mean IoU: 0.7108  Boundary IoU: 0.6768
+```
+
 Working commands after environment and data setup:
 
 ```bash
@@ -128,4 +136,11 @@ bash scripts/train_lerf_12gb.sh ramen 0 7000
 bash scripts/render_eval_lerf.sh ramen 0 7000
 bash scripts/train_lerf_12gb.sh teatime 0 7000
 bash scripts/render_eval_lerf.sh teatime 0 7000
+```
+
+Named experiments should use:
+
+```bash
+bash scripts/train_lerf_experiment.sh teatime densify1500_7000 configs/gaussian_grouping/train_12gb_densify1500.json 0 7000
+bash scripts/render_eval_lerf_experiment.sh teatime densify1500_7000 0 7000
 ```

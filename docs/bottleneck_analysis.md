@@ -362,13 +362,19 @@ Baseline:
   densify_until_iter = 1000
   iterations = 7000
 
-Trial A:
+Completed Trial A:
   densify_until_iter = 1500
   iterations = 7000
+  reg3d_max_points = 50000
+  reg3d_sample_size = 256
 
-If OOM:
-  reduce reg3d_sample_size from 512 to 256
-  or reduce reg3d_max_points from 100000 to 50000
+Result:
+  Mean IoU: 0.6672 -> 0.7108
+  Boundary Mean IoU: 0.6365 -> 0.6768
+
+Remaining issue:
+  spoon handle stayed at 0.0000
+  cookies on a plate stayed near 0.22
 ```
 
 Evaluation:
@@ -428,3 +434,4 @@ small/ambiguous object: rubber duck with red hat
 
 These failures are valuable rather than purely negative: they identify where parameter tuning and downstream editing validation should focus.
 
+The densify1500 experiment confirms that more densification can improve overall segmentation under the 12GB budget, but it does not fix the hardest prompt-level failures. The next bottleneck to address is prompt and mask-selection quality for thin or semantically entangled targets.

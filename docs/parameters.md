@@ -32,6 +32,22 @@ Other settings, such as `iterations`, `data_device`, `densification_interval`, a
 
 This config is conservative. It reduces memory by stopping densification early and lowering 3D regularization cost.
 
+## Densify1500 Enhancement Config
+
+```json
+{
+  "densify_until_iter": 1500,
+  "num_classes": 256,
+  "reg3d_interval": 10,
+  "reg3d_k": 5,
+  "reg3d_lambda_val": 1,
+  "reg3d_max_points": 50000,
+  "reg3d_sample_size": 256
+}
+```
+
+This config increases densification while reducing 3D regularization sampling cost. On `teatime`, it improved overall Mean IoU from `0.6672` to `0.7108` and Boundary Mean IoU from `0.6365` to `0.6768`.
+
 ## Effective Command-Line Parameters
 
 The completed `figurines` run used:
@@ -52,4 +68,3 @@ Potential next low-memory additions:
 ```
 
 These should be passed on the command line, not placed in JSON.
-
