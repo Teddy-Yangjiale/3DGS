@@ -144,3 +144,10 @@ Named experiments should use:
 bash scripts/train_lerf_experiment.sh teatime densify1500_7000 configs/gaussian_grouping/train_12gb_densify1500.json 0 7000
 bash scripts/render_eval_lerf_experiment.sh teatime densify1500_7000 0 7000
 ```
+
+Prompt-tuning experiments reuse a trained model:
+
+```bash
+bash scripts/patch_gaussian_grouping_prompt_tuning.sh
+bash scripts/render_eval_lerf_prompt_experiment.sh teatime teatime prompt_spoon_cookies_7000 0 7000 '{"spoon handle":"spoon","cookies on a plate":"cookies"}'
+```

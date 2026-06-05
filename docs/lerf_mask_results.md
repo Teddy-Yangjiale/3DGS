@@ -167,3 +167,27 @@ Candidate next directions:
 ```
 
 Do not replace the three-scene baseline results. Treat tuning as a separate enhancement experiment.
+
+## Prompt-Tuning Plan For Teatime
+
+The exported failure masks show that:
+
+```text
+spoon handle: predicted mask is empty
+cookies on a plate: predicted mask selects only partial/wrong regions
+```
+
+This indicates a prompt/mask localization bottleneck. The next experiment should reuse the trained `teatime` model and override only the Grounded-SAM query prompt:
+
+```text
+spoon handle -> spoon
+cookies on a plate -> cookies
+```
+
+Run:
+
+```bash
+cd ~/3DGS
+bash scripts/patch_gaussian_grouping_prompt_tuning.sh
+bash scripts/render_eval_lerf_prompt_experiment.sh teatime teatime prompt_spoon_cookies_7000 0 7000 '{"spoon handle":"spoon","cookies on a plate":"cookies"}'
+```

@@ -155,3 +155,52 @@ docs/lerf_mask_results.md
 ```
 
 Use scene-specific result pages only when a scene needs detailed discussion.
+
+## Running A Prompt-Tuning Experiment
+
+Prompt tuning reuses an existing trained model and only changes the text prompt used by Grounded-SAM. It preserves the original output filename so the upstream evaluator can still compare against the original GT class name.
+
+First patch `render_lerf_mask.py`:
+
+```bash
+cd ~/3DGS
+bash scripts/patch_gaussian_grouping_prompt_tuning.sh
+```
+
+Example: evaluate `spoon handle` by querying Grounded-SAM with `spoon`, while still saving the result as `spoon handle.png`:
+
+```bash
+cd ~/3DGS
+bash scripts/render_eval_lerf_prompt_experiment.sh \
+  teatime \
+  teatime \
+  prompt_spoon_7000 \
+  0 \
+  7000 \
+  '{"spoon handle":"spoon"}'
+```
+
+Example: evaluate two prompt overrides at once:
+
+```bash
+cd ~/3DGS
+bash scripts/render_eval_lerf_prompt_experiment.sh \
+  teatime \
+  teatime \
+  prompt_spoon_cookies_7000 \
+  0 \
+  7000 \
+  '{"spoon handle":"spoon","cookies on a plate":"cookies"}'
+```
+
+This writes predictions under:
+
+```text
+third_party/gaussian-grouping/output/lerf/teatime/test/ours_7000_prompt_spoon_cookies_7000/test_mask/
+```
+
+and records the trial link under:
+
+```text
+third_party/gaussian-grouping/result/lerf_mask_trials/teatime_prompt_spoon_cookies_7000
+```

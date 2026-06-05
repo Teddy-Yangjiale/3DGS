@@ -140,6 +140,28 @@ teatime_prompt_cookies_7000
 
 Do not mix prompt-tuned results into baseline metrics.
 
+First concrete command for `teatime`:
+
+```bash
+cd ~/3DGS
+bash scripts/patch_gaussian_grouping_prompt_tuning.sh
+
+bash scripts/render_eval_lerf_prompt_experiment.sh \
+  teatime \
+  teatime \
+  prompt_spoon_cookies_7000 \
+  0 \
+  7000 \
+  '{"spoon handle":"spoon","cookies on a plate":"cookies"}'
+```
+
+If this improves `spoon handle` or `cookies on a plate`, keep it as the first prompt-tuning contribution. If it does not, try separate variants:
+
+```bash
+bash scripts/render_eval_lerf_prompt_experiment.sh teatime teatime prompt_metal_spoon_7000 0 7000 '{"spoon handle":"metal spoon"}'
+bash scripts/render_eval_lerf_prompt_experiment.sh teatime teatime prompt_cookies_on_plate_short_7000 0 7000 '{"cookies on a plate":"cookies on plate"}'
+```
+
 ## Phase 4: Optional Densification Trial
 
 Only run this if failure masks are qualitatively correct but boundaries remain rough.
@@ -213,4 +235,3 @@ attempt object removal
 ```
 
 This should come after the public-data reproduction, enhancement result, and at least one downstream editing demo are cleanly documented.
-
