@@ -29,7 +29,9 @@ else
   eval "$(conda shell.bash hook)"
 fi
 
+set +u
 conda activate gaussian_grouping
+set -u
 source "$PROJECT_DIR/scripts/env_gaussian_grouping.sh"
 
 cd "$GG_DIR"

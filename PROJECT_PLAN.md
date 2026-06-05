@@ -72,6 +72,7 @@ Large files stay out of Git. Git tracks scripts, configs, notes, and report file
 5. Contribution
    - Tune mask filtering or segmentation parameters after the three-scene baseline is complete.
    - `teatime_densify1500` completed: Mean IoU 0.7108, Boundary Mean IoU 0.6768.
+   - `teatime_prompt_cookies` completed: Mean IoU 0.7344, Boundary Mean IoU 0.7145.
    - Compare before/after outputs qualitatively.
    - Record failure cases.
 

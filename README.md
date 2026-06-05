@@ -125,6 +125,7 @@ Enhancement result:
 
 ```text
 teatime_densify1500  Mean IoU: 0.7108  Boundary IoU: 0.6768
+teatime_prompt_cookies  Mean IoU: 0.7344  Boundary IoU: 0.7145
 ```
 
 Working commands after environment and data setup:

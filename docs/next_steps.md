@@ -17,6 +17,7 @@ Enhancement:
 | Scene | Experiment | Mean IoU | Boundary Mean IoU |
 | --- | --- | ---: | ---: |
 | teatime | densify1500_7000 | 0.7108 | 0.6768 |
+| teatime | prompt_hardcoded_spoon_cookies_7000 | 0.7344 | 0.7145 |
 
 Note: the first enhancement was run on the server under the legacy path:
 
@@ -140,7 +141,19 @@ teatime_prompt_cookies_7000
 
 Do not mix prompt-tuned results into baseline metrics.
 
-First concrete command for `teatime`:
+Completed prompt test:
+
+```text
+cookies on a plate -> cookies:
+  IoU 0.2229 -> 0.8948
+
+spoon handle -> spoon:
+  IoU 0.0000 -> 0.0000
+```
+
+This confirms that prompt tuning is useful for composition-like targets, but the spoon handle case remains unsolved.
+
+Next prompt target for `teatime`:
 
 ```bash
 cd ~/3DGS
@@ -149,17 +162,17 @@ bash scripts/patch_gaussian_grouping_prompt_tuning.sh
 bash scripts/render_eval_lerf_prompt_experiment.sh \
   teatime \
   teatime \
-  prompt_spoon_cookies_7000 \
+  prompt_metal_spoon_7000 \
   0 \
   7000 \
-  '{"spoon handle":"spoon","cookies on a plate":"cookies"}'
+  '{"spoon handle":"metal spoon"}'
 ```
 
-If this improves `spoon handle` or `cookies on a plate`, keep it as the first prompt-tuning contribution. If it does not, try separate variants:
+If this does not improve `spoon handle`, try separate variants:
 
 ```bash
-bash scripts/render_eval_lerf_prompt_experiment.sh teatime teatime prompt_metal_spoon_7000 0 7000 '{"spoon handle":"metal spoon"}'
-bash scripts/render_eval_lerf_prompt_experiment.sh teatime teatime prompt_cookies_on_plate_short_7000 0 7000 '{"cookies on a plate":"cookies on plate"}'
+bash scripts/render_eval_lerf_prompt_experiment.sh teatime teatime prompt_silver_spoon_7000 0 7000 '{"spoon handle":"silver spoon"}'
+bash scripts/render_eval_lerf_prompt_experiment.sh teatime teatime prompt_spoon_handle_object_7000 0 7000 '{"spoon handle":"spoon handle"}'
 ```
 
 ## Phase 4: Optional Densification Trial

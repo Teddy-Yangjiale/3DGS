@@ -38,6 +38,7 @@ Enhancement experiments:
 | Scene | Experiment | Mean IoU | Boundary Mean IoU | Main Observation |
 | --- | --- | ---: | ---: | --- |
 | teatime | densify1500_7000 | 0.7108 | 0.6768 | improves overall score, but spoon handle remains 0.0 |
+| teatime | prompt_hardcoded_spoon_cookies_7000 | 0.7344 | 0.7145 | prompt `cookies` fixes cookies on a plate; spoon handle remains 0.0 |
 
 ## Figurines
 
@@ -137,6 +138,42 @@ Interpretation:
 
 Increasing densification improved overall quality, mainly through `sheep` and `tea in a glass`. It did not solve the hardest categories: `spoon handle` stayed at `0.0000`, and `cookies on a plate` stayed around `0.22`. This suggests those failures are likely caused by prompt/mask localization or semantic entanglement rather than only insufficient Gaussian density.
 
+### Teatime Prompt-Tuning Enhancement
+
+Prompt override:
+
+```text
+cookies on a plate -> cookies
+spoon handle -> spoon
+```
+
+Implementation note:
+
+This first prompt-tuning run was executed as a hardcoded test in `render_lerf_mask.py`, then the generated `cookies.png` and `spoon.png` masks were copied back to the original evaluator filenames:
+
+```text
+cookies.png -> cookies on a plate.png
+spoon.png -> spoon handle.png
+```
+
+Result:
+
+```text
+Overall Mean IoU: 0.7344
+Overall Boundary Mean IoU: 0.7145
+```
+
+Per-class comparison:
+
+| Class | Baseline IoU | Prompt-Tuned IoU | Change |
+| --- | ---: | ---: | ---: |
+| spoon handle | 0.0000 | 0.0000 | +0.0000 |
+| cookies on a plate | 0.2229 | 0.8948 | +0.6719 |
+
+Interpretation:
+
+The `cookies` prompt fixes the `cookies on a plate` failure almost completely. This confirms that the original failure was primarily a text-prompt/mask-localization problem, not a 3DGS training problem. The `spoon` prompt still gives `0.0000` for `spoon handle`, so that category likely requires a different prompt, threshold adjustment, or manual/mask-selection strategy.
+
 ## Current Interpretation
 
 The three completed scenes support the same conclusion:
@@ -162,32 +199,44 @@ Candidate next directions:
 ```text
 1. Keep baseline and densify1500 as separate recorded experiments.
 2. Inspect spoon handle and cookies on a plate masks.
-3. Try prompt/mask tuning for spoon handle and cookies.
-4. Only try densify_until_iter=2000 if the qualitative masks look correct but boundaries remain rough.
+3. Keep the cookies prompt-tuning result as a successful enhancement.
+4. Try additional prompts for spoon handle: metal spoon, silver spoon, spoon.
+5. Only try densify_until_iter=2000 if the qualitative masks look correct but boundaries remain rough.
 ```
 
 Do not replace the three-scene baseline results. Treat tuning as a separate enhancement experiment.
 
 ## Prompt-Tuning Plan For Teatime
 
-The exported failure masks show that:
+The exported failure masks showed that:
 
 ```text
 spoon handle: predicted mask is empty
 cookies on a plate: predicted mask selects only partial/wrong regions
 ```
 
-This indicates a prompt/mask localization bottleneck. The next experiment should reuse the trained `teatime` model and override only the Grounded-SAM query prompt:
+This indicates a prompt/mask localization bottleneck. The first prompt-tuning experiment reused the trained `teatime` model and changed the Grounded-SAM query prompt:
 
 ```text
 spoon handle -> spoon
 cookies on a plate -> cookies
 ```
 
-Run:
+Result:
+
+```text
+cookies on a plate: 0.2229 -> 0.8948
+spoon handle: 0.0000 -> 0.0000
+Overall Mean IoU: 0.6672 -> 0.7344
+Boundary Mean IoU: 0.6365 -> 0.7145
+```
+
+The next prompt-tuning target is now only `spoon handle`.
+
+Potential commands after making the prompt override script reliable:
 
 ```bash
 cd ~/3DGS
 bash scripts/patch_gaussian_grouping_prompt_tuning.sh
-bash scripts/render_eval_lerf_prompt_experiment.sh teatime teatime prompt_spoon_cookies_7000 0 7000 '{"spoon handle":"spoon","cookies on a plate":"cookies"}'
+bash scripts/render_eval_lerf_prompt_experiment.sh teatime teatime prompt_metal_spoon_7000 0 7000 '{"spoon handle":"metal spoon"}'
 ```

@@ -435,3 +435,7 @@ small/ambiguous object: rubber duck with red hat
 These failures are valuable rather than purely negative: they identify where parameter tuning and downstream editing validation should focus.
 
 The densify1500 experiment confirms that more densification can improve overall segmentation under the 12GB budget, but it does not fix the hardest prompt-level failures. The next bottleneck to address is prompt and mask-selection quality for thin or semantically entangled targets.
+
+The first hardcoded prompt-tuning experiment on `teatime` changed `cookies on a plate` to query `cookies`. This improved `cookies on a plate` from `0.2229` to `0.8948`, and improved scene-level Mean IoU from `0.6672` to `0.7344`. This is direct evidence that at least one major failure was caused by text-prompt localization rather than 3D Gaussian representation.
+
+The same experiment changed `spoon handle` to query `spoon`, but the IoU remained `0.0000`. This indicates that the spoon handle failure is harder: it may require a different prompt, lower detection threshold, local mask selection, or manual validation.
