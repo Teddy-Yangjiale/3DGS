@@ -14,6 +14,14 @@ ITERATIONS="${3:-7000}"
 PROJECT_DIR="${PROJECT_DIR:-$HOME/3DGS}"
 GG_DIR="${GG_DIR:-$PROJECT_DIR/third_party/gaussian-grouping}"
 
+if [ -f "$HOME/miniconda3/etc/profile.d/conda.sh" ]; then
+  source "$HOME/miniconda3/etc/profile.d/conda.sh"
+elif [ -f "$HOME/anaconda3/etc/profile.d/conda.sh" ]; then
+  source "$HOME/anaconda3/etc/profile.d/conda.sh"
+else
+  eval "$(conda shell.bash hook)"
+fi
+
 conda activate gaussian_grouping
 source "$PROJECT_DIR/scripts/env_gaussian_grouping.sh"
 
@@ -30,4 +38,3 @@ CUDA_VISIBLE_DEVICES="$GPU_ID" python train.py \
   --test_iterations 1000 "$ITERATIONS" \
   --save_iterations 1000 "$ITERATIONS" \
   2>&1 | tee "$PROJECT_DIR/logs/train_${SCENE}_${ITERATIONS}_12gb.log"
-

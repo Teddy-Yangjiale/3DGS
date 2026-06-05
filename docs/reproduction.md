@@ -1,8 +1,40 @@
-# Reproduction Notes
+# Reproduction Guide
 
-This project reproduces object-level segmentation in 3D Gaussian Splatting with Gaussian Grouping on LERF-MASK.
+This guide records the working reproduction path for Gaussian Grouping on LERF-MASK with a 12GB NVIDIA TITAN V server. It is written for the lab server where outbound access to Hugging Face may be unavailable.
 
-## Repository Layout
+## 0. What This Repository Contains
+
+Committed to GitHub:
+
+```text
+configs/                 Low-memory training config
+docs/                    Reproduction notes and result summaries
+scripts/                 Environment, patch, training, rendering, evaluation helpers
+README.md
+PROJECT_PLAN.md
+```
+
+Not committed:
+
+```text
+data/lerf_mask/          LERF-MASK dataset
+third_party/             Gaussian Grouping source tree
+checkpoints/             GroundingDINO, BERT, SAM, trained weights
+outputs/ and output/     Rendered results and model outputs
+logs/                    Runtime logs
+```
+
+## 1. Expected Workspace
+
+Use `/data1` or `/data2` on the server. The lab server guideline says not to store large files on the system disk.
+
+```bash
+mkdir -p /data2/$USER/3DGS
+cd /data2/$USER/3DGS
+git clone https://github.com/Teddy-Yangjiale/3DGS .
+```
+
+The final workspace should look like:
 
 ```text
 ~/3DGS/
@@ -10,52 +42,39 @@ This project reproduces object-level segmentation in 3D Gaussian Splatting with 
   data/lerf_mask/
   checkpoints/
   logs/
-  outputs/
   scripts/
   third_party/gaussian-grouping/
 ```
 
-Only code, configs, scripts, and documentation are committed. Datasets, checkpoints, logs, trained 3DGS outputs, videos, and large masks stay out of Git.
-
-## Server Environment
-
-Observed server environment:
-
-```text
-GPU: NVIDIA TITAN V, 12GB
-NVIDIA driver: 580.159.03
-System CUDA toolkit: 11.8
-Conda env: gaussian_grouping
-Python: 3.8
-PyTorch: 1.12.1
-Conda cudatoolkit: 11.3
-```
-
-Key CUDA extension settings used for TITAN V:
+## 2. Clone Gaussian Grouping
 
 ```bash
-export TORCH_CUDA_ARCH_LIST="7.0"
-export MAX_JOBS=2
+cd ~/3DGS
+mkdir -p third_party
+git clone --recursive https://github.com/lkeab/gaussian-grouping third_party/gaussian-grouping
 ```
 
-Runtime library path used before training and rendering:
+If the submodules are incomplete:
 
 ```bash
-source scripts/env_gaussian_grouping.sh
+cd ~/3DGS/third_party/gaussian-grouping
+git submodule update --init --recursive
 ```
 
-## Dataset
+## 3. Prepare LERF-MASK
 
-LERF-MASK scenes are stored under:
+Because the server may not download files directly, download the three zip files locally and upload them by `scp`.
+
+Expected server layout:
 
 ```text
-data/lerf_mask/
+~/3DGS/data/lerf_mask/
   figurines/
   ramen/
   teatime/
 ```
 
-Each scene should contain:
+Each scene should contain at least:
 
 ```text
 images/
@@ -65,7 +84,7 @@ sparse/
 test_mask/
 ```
 
-Inside the Gaussian Grouping repository, create symlinks:
+Create symlinks for the upstream code:
 
 ```bash
 cd ~/3DGS/third_party/gaussian-grouping
@@ -74,33 +93,208 @@ ln -sfn ~/3DGS/data/lerf_mask data/lerf
 ln -sfn ~/3DGS/data/lerf_mask data/lerf_mask
 ```
 
-## Offline Checkpoints
+Check:
 
-The server cannot access Hugging Face directly, so the following files are downloaded locally and uploaded to the server.
+```bash
+find data/lerf_mask -maxdepth 2 -type d | sort | head -50
+```
+
+## 4. Create Conda Environment
+
+```bash
+cd ~/3DGS/third_party/gaussian-grouping
+
+conda create -n gaussian_grouping python=3.8 -y
+conda activate gaussian_grouping
+
+conda install pytorch==1.12.1 torchvision==0.13.1 torchaudio==0.12.1 cudatoolkit=11.3 -c pytorch -y
+
+pip install plyfile==0.8.1
+pip install tqdm scipy wandb opencv-python scikit-learn lpips ninja
+```
+
+## 5. Compile 3DGS CUDA Extensions
+
+The TITAN V uses compute capability 7.0. The server's default compiler may be too new for CUDA 11.8, so install a compatible conda compiler.
+
+```bash
+conda activate gaussian_grouping
+cd ~/3DGS/third_party/gaussian-grouping
+
+conda install -c conda-forge gcc_linux-64=11 gxx_linux-64=11 libxcrypt sysroot_linux-64 -y
+
+export CUDA_HOME=/usr/local/cuda
+export PATH=$CUDA_HOME/bin:$PATH
+export LD_LIBRARY_PATH=$CUDA_HOME/lib64:$LD_LIBRARY_PATH
+
+export CC=$CONDA_PREFIX/bin/x86_64-conda-linux-gnu-gcc
+export CXX=$CONDA_PREFIX/bin/x86_64-conda-linux-gnu-g++
+export CUDAHOSTCXX=$CXX
+export CPATH=$CONDA_PREFIX/include:$CPATH
+export TORCH_CUDA_ARCH_LIST="7.0"
+export MAX_JOBS=2
+
+python -m pip install --no-build-isolation --no-cache-dir submodules/diff-gaussian-rasterization
+python -m pip install --no-build-isolation --no-cache-dir submodules/simple-knn
+```
+
+Check:
+
+```bash
+python - <<'PY'
+import torch
+import diff_gaussian_rasterization
+import simple_knn
+print("extensions OK")
+print("torch:", torch.__version__)
+print("cuda available:", torch.cuda.is_available())
+print("gpu:", torch.cuda.get_device_name(0) if torch.cuda.is_available() else "none")
+PY
+```
+
+## 6. Runtime Environment Variables
+
+Before each training or rendering run:
+
+```bash
+conda activate gaussian_grouping
+source ~/3DGS/scripts/env_gaussian_grouping.sh
+```
+
+This script sets:
+
+```text
+LD_LIBRARY_PATH
+PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:128
+TORCH_CUDA_ARCH_LIST=7.0
+MAX_JOBS=2
+```
+
+It also links `libcuda.so` into the conda environment when possible. This avoids runtime failures such as:
+
+```text
+libcuda.so: cannot open shared object file
+```
+
+## 7. Install Grounded-SAM Dependencies
+
+`render_lerf_mask.py` needs GroundingDINO and Segment Anything.
+
+```bash
+conda activate gaussian_grouping
+cd ~/3DGS/third_party/gaussian-grouping
+
+git submodule update --init --recursive
+
+cd Tracking-Anything-with-DEVA
+python -m pip install -e .
+
+git clone https://github.com/hkchengrex/Grounded-Segment-Anything.git
+cd Grounded-Segment-Anything
+
+export AM_I_DOCKER=False
+export BUILD_WITH_CUDA=True
+
+python -m pip install -e segment_anything
+python -m pip install -e GroundingDINO
+```
+
+Check:
+
+```bash
+python - <<'PY'
+import groundingdino
+import segment_anything
+print("GroundingDINO and SAM import OK")
+PY
+```
+
+## 8. Offline Checkpoints
+
+The server may not access Hugging Face. Download these files locally and upload them to the server.
 
 GroundingDINO:
 
 ```text
-checkpoints/groundingdino/GroundingDINO_SwinB.cfg.py
-checkpoints/groundingdino/GroundingDINO_SwinB.local.cfg.py
-checkpoints/groundingdino/groundingdino_swinb_cogcoor.pth
+https://huggingface.co/ShilongLiu/GroundingDINO/resolve/main/GroundingDINO_SwinB.cfg.py
+https://huggingface.co/ShilongLiu/GroundingDINO/resolve/main/groundingdino_swinb_cogcoor.pth
 ```
 
 BERT:
 
 ```text
-checkpoints/bert-base-uncased/config.json
-checkpoints/bert-base-uncased/tokenizer_config.json
-checkpoints/bert-base-uncased/tokenizer.json
-checkpoints/bert-base-uncased/vocab.txt
-checkpoints/bert-base-uncased/pytorch_model.bin
+https://huggingface.co/bert-base-uncased/resolve/main/config.json
+https://huggingface.co/bert-base-uncased/resolve/main/tokenizer_config.json
+https://huggingface.co/bert-base-uncased/resolve/main/tokenizer.json
+https://huggingface.co/bert-base-uncased/resolve/main/vocab.txt
+https://huggingface.co/bert-base-uncased/resolve/main/pytorch_model.bin
 ```
 
-These files are not committed to Git.
+Server layout:
 
-## Training
+```text
+~/3DGS/checkpoints/groundingdino/
+  GroundingDINO_SwinB.cfg.py
+  groundingdino_swinb_cogcoor.pth
 
-For 12GB TITAN V, the successful `figurines` run used:
+~/3DGS/checkpoints/bert-base-uncased/
+  config.json
+  tokenizer_config.json
+  tokenizer.json
+  vocab.txt
+  pytorch_model.bin
+```
+
+If using Windows PowerShell:
+
+```powershell
+scp "D:\Downloads\GroundingDINO_SwinB.cfg.py" "D:\Downloads\groundingdino_swinb_cogcoor.pth" cse12411723@172.18.35.215:~/3DGS/checkpoints/groundingdino/
+
+scp "D:\Downloads\bert-base-uncased\config.json" "D:\Downloads\bert-base-uncased\tokenizer_config.json" "D:\Downloads\bert-base-uncased\tokenizer.json" "D:\Downloads\bert-base-uncased\vocab.txt" "D:\Downloads\bert-base-uncased\pytorch_model.bin" cse12411723@172.18.35.215:~/3DGS/checkpoints/bert-base-uncased/
+```
+
+## 9. Patch Gaussian Grouping For Offline Rendering
+
+Apply the local patch script after cloning Gaussian Grouping and uploading the offline checkpoints:
+
+```bash
+cd ~/3DGS
+bash scripts/patch_gaussian_grouping_offline.sh
+```
+
+This patch does four things:
+
+```text
+1. Makes ext/grounded_sam.py load local GroundingDINO config and weights.
+2. Makes render_lerf_mask.py use the local GroundingDINO config.
+3. Makes GroundingDINO accept a local BERT directory.
+4. Skips a visualization-only supervision annotate call with an incompatible API.
+```
+
+Check local BERT:
+
+```bash
+cd ~/3DGS/third_party/gaussian-grouping/Tracking-Anything-with-DEVA/Grounded-Segment-Anything/GroundingDINO
+python - <<'PY'
+from groundingdino.util.get_tokenlizer import get_tokenlizer, get_pretrained_language_model
+import os
+bert_path = os.path.expanduser("~/3DGS/checkpoints/bert-base-uncased")
+tok = get_tokenlizer(bert_path)
+model = get_pretrained_language_model(bert_path)
+print("local BERT OK")
+PY
+```
+
+## 10. Train Figurines
+
+The working low-memory run used `-r 1`. We did not use `-r 2` because the RGB images were resized but `object_mask` targets stayed at the original resolution in this code path.
+
+```bash
+cd ~/3DGS
+bash scripts/train_lerf_12gb.sh figurines 0 7000
+```
+
+Equivalent explicit command:
 
 ```bash
 conda activate gaussian_grouping
@@ -118,40 +312,96 @@ CUDA_VISIBLE_DEVICES=0 python train.py \
   --save_iterations 1000 7000
 ```
 
-The `-r 2` setting was not used in the completed run because RGB images were resized but `object_mask` targets stayed at the original size in the current code path.
+The successful run produced:
 
-## Rendering And Evaluation
+```text
+ITER 1000:
+  L1   = 0.0927
+  PSNR = 17.99
 
-Generate text-prompt masks:
+ITER 7000:
+  L1   = 0.0581
+  PSNR = 22.13
+```
+
+## 11. Render Text-Prompt Masks And Evaluate
 
 ```bash
+cd ~/3DGS
+bash scripts/render_eval_lerf.sh figurines 0 7000
+```
+
+Equivalent explicit commands:
+
+```bash
+conda activate gaussian_grouping
+cd ~/3DGS/third_party/gaussian-grouping
+source ~/3DGS/scripts/env_gaussian_grouping.sh
+
 CUDA_VISIBLE_DEVICES=0 python render_lerf_mask.py \
   -m output/lerf/figurines \
   --skip_train
-```
 
-The script writes masks to:
-
-```text
-output/lerf/figurines/test/ours_7000_text/test_mask/
-```
-
-The evaluation script expects:
-
-```text
-result/lerf_mask/figurines/
-```
-
-Create a symlink:
-
-```bash
 mkdir -p result/lerf_mask
 ln -sfn "$(pwd)/output/lerf/figurines/test/ours_7000_text/test_mask" result/lerf_mask/figurines
-```
 
-Evaluate:
-
-```bash
 python script/eval_lerf_mask.py figurines
 ```
 
+The successful `figurines` evaluation produced:
+
+```text
+Overall Mean IoU: 0.7630
+Overall Boundary Mean IoU: 0.7427
+```
+
+## 12. Known Issues And Fixes
+
+`ModuleNotFoundError: diff_gaussian_rasterization` or `simple_knn`:
+
+```text
+The CUDA extensions were not compiled in the active conda environment.
+Compile them after activating gaussian_grouping.
+```
+
+`Unknown CUDA arch (8.9)`:
+
+```text
+PyTorch 1.12 does not recognize a newer default arch. Set TORCH_CUDA_ARCH_LIST=7.0 for TITAN V.
+```
+
+`unsupported GNU version`:
+
+```text
+System gcc is too new for CUDA 11.8. Use conda gcc/g++ 11.
+```
+
+`crypt.h: No such file or directory`:
+
+```text
+Install libxcrypt/sysroot_linux-64 in conda and expose CONDA_PREFIX/include.
+```
+
+`libcuda.so: cannot open shared object file`:
+
+```text
+Run source ~/3DGS/scripts/env_gaussian_grouping.sh before training/rendering.
+```
+
+`input and target batch or spatial sizes don't match` with `-r 2`:
+
+```text
+RGB images were downsampled but object_mask stayed at original size. Use -r 1 unless the mask loader or masks are resized consistently.
+```
+
+`huggingface.co ... Network is unreachable`:
+
+```text
+Upload GroundingDINO and BERT files manually, then run scripts/patch_gaussian_grouping_offline.sh.
+```
+
+`annotate() got an unexpected keyword argument 'labels'`:
+
+```text
+supervision API version mismatch. The offline patch skips visualization annotation and keeps mask generation.
+```

@@ -46,7 +46,7 @@ new_func = '''def load_model_hf(repo_id, filename, ckpt_config_filename, device=
 
 '''
 
-text2 = re.sub(r"def load_model_hf\\(.*?\\n(?=def show_mask)", new_func, text, flags=re.S)
+text2 = re.sub(r"def load_model_hf\(.*?\n(?=def show_mask)", new_func, text, flags=re.S)
 if text2 == text:
     raise SystemExit("Could not patch load_model_hf in ext/grounded_sam.py")
 
@@ -92,4 +92,3 @@ print("Offline patch applied.")
 PY
 
 python -m py_compile ext/grounded_sam.py
-

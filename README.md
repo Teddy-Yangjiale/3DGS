@@ -1,8 +1,8 @@
 # 3DGS Object Segmentation Project
 
-This repository tracks code, scripts, notes, and report material for object-level segmentation and editing in 3D Gaussian Splatting.
+This repository tracks a reproducible setup for object-level segmentation and editing in 3D Gaussian Splatting. The current reproduced method is Gaussian Grouping on LERF-MASK.
 
-Large datasets, trained models, rendered videos, and checkpoints are intentionally excluded from Git. Put them on the lab server under `/data1` or `/data2`.
+Large datasets, trained models, rendered videos, logs, third-party source trees, and checkpoints are intentionally excluded from Git. Put them on the lab server under `/data1` or `/data2`.
 
 ## Recommended Layout
 
@@ -61,10 +61,11 @@ mkdir -p third_party
 git clone --recursive https://github.com/lkeab/gaussian-grouping third_party/gaussian-grouping
 ```
 
-Follow the upstream install notes if package versions need adjustment:
+Follow the full project reproduction guide:
 
-- https://github.com/lkeab/gaussian-grouping
-- https://github.com/lkeab/gaussian-grouping/blob/main/docs/install.md
+- [docs/reproduction.md](docs/reproduction.md)
+- [docs/parameters.md](docs/parameters.md)
+- [docs/figurines_result.md](docs/figurines_result.md)
 
 ## Dataset Placement
 
@@ -89,3 +90,24 @@ On the server, the real path should be:
 
 Do not put datasets in `/home`, `/tmp`, or system directories.
 
+## Current Reproduced Result
+
+Completed scene:
+
+```text
+LERF-MASK / figurines
+```
+
+Result:
+
+```text
+Overall Mean IoU: 0.7630
+Overall Boundary Mean IoU: 0.7427
+```
+
+Working commands after environment and data setup:
+
+```bash
+bash scripts/train_lerf_12gb.sh figurines 0 7000
+bash scripts/render_eval_lerf.sh figurines 0 7000
+```
