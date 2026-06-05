@@ -65,6 +65,7 @@ Follow the full project reproduction guide:
 
 - [docs/reproduction.md](docs/reproduction.md)
 - [docs/parameters.md](docs/parameters.md)
+- [docs/lerf_mask_results.md](docs/lerf_mask_results.md)
 - [docs/figurines_result.md](docs/figurines_result.md)
 
 ## Dataset Placement
@@ -90,19 +91,29 @@ On the server, the real path should be:
 
 Do not put datasets in `/home`, `/tmp`, or system directories.
 
-## Current Reproduced Result
+## Current Reproduced Results
 
-Completed scene:
+Completed scenes:
 
 ```text
 LERF-MASK / figurines
+LERF-MASK / ramen
 ```
 
-Result:
+Baseline setting:
 
 ```text
-Overall Mean IoU: 0.7630
-Overall Boundary Mean IoU: 0.7427
+resolution scale: -r 1
+iterations: 7000
+config: configs/gaussian_grouping/train_12gb.json
+GPU: NVIDIA TITAN V, 12GB
+```
+
+Results:
+
+```text
+figurines  Mean IoU: 0.7630  Boundary IoU: 0.7427
+ramen      Mean IoU: 0.7620  Boundary IoU: 0.6805
 ```
 
 Working commands after environment and data setup:
@@ -110,4 +121,6 @@ Working commands after environment and data setup:
 ```bash
 bash scripts/train_lerf_12gb.sh figurines 0 7000
 bash scripts/render_eval_lerf.sh figurines 0 7000
+bash scripts/train_lerf_12gb.sh ramen 0 7000
+bash scripts/render_eval_lerf.sh ramen 0 7000
 ```

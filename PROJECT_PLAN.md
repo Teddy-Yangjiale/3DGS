@@ -50,9 +50,12 @@ Large files stay out of Git. Git tracks scripts, configs, notes, and report file
    - Build CUDA extensions.
 
 2. Public data reproduction
-   - Download LERF-Mask scenes.
+   - Download LERF-Mask scenes. Completed.
    - Run segmentation rendering for three scenes.
    - Record IoU and Boundary-IoU if official annotations are available.
+   - `figurines` completed: Mean IoU 0.7630, Boundary Mean IoU 0.7427.
+   - `ramen` completed: Mean IoU 0.7620, Boundary Mean IoU 0.6805.
+   - `teatime` pending with the same baseline before parameter tuning.
 
 3. Downstream editing
    - Run object removal on at least one scene.
@@ -66,7 +69,7 @@ Large files stay out of Git. Git tracks scripts, configs, notes, and report file
    - Train segmentation and render results.
 
 5. Contribution
-   - Tune mask filtering or segmentation parameters for the custom scene.
+   - Tune mask filtering or segmentation parameters after the three-scene baseline is complete.
    - Compare before/after outputs qualitatively.
    - Record failure cases.
 
@@ -77,4 +80,3 @@ Large files stay out of Git. Git tracks scripts, configs, notes, and report file
    - Editing results.
    - Custom data result.
    - Enhancement and analysis.
-

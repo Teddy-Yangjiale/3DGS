@@ -1,5 +1,7 @@
 # Figurines Result
 
+See [LERF-MASK Results](lerf_mask_results.md) for the cross-scene summary.
+
 Scene:
 
 ```text
@@ -61,4 +63,3 @@ green apple: 0.8866
 Observation:
 
 Most medium-sized objects are segmented well. The weakest category is `rubber duck with red hat`, likely because the object is small, visually ambiguous, or less stable under text-prompt localization and low-memory Gaussian densification.
-
