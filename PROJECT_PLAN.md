@@ -55,7 +55,8 @@ Large files stay out of Git. Git tracks scripts, configs, notes, and report file
    - Record IoU and Boundary-IoU if official annotations are available.
    - `figurines` completed: Mean IoU 0.7630, Boundary Mean IoU 0.7427.
    - `ramen` completed: Mean IoU 0.7620, Boundary Mean IoU 0.6805.
-   - `teatime` pending with the same baseline before parameter tuning.
+   - `teatime` completed: Mean IoU 0.6672, Boundary Mean IoU 0.6365.
+   - Three-scene baseline is complete; next step is parameter tuning on representative failure cases.
 
 3. Downstream editing
    - Run object removal on at least one scene.

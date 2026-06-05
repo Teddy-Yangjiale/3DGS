@@ -98,6 +98,7 @@ Completed scenes:
 ```text
 LERF-MASK / figurines
 LERF-MASK / ramen
+LERF-MASK / teatime
 ```
 
 Baseline setting:
@@ -114,6 +115,7 @@ Results:
 ```text
 figurines  Mean IoU: 0.7630  Boundary IoU: 0.7427
 ramen      Mean IoU: 0.7620  Boundary IoU: 0.6805
+teatime    Mean IoU: 0.6672  Boundary IoU: 0.6365
 ```
 
 Working commands after environment and data setup:
@@ -123,4 +125,6 @@ bash scripts/train_lerf_12gb.sh figurines 0 7000
 bash scripts/render_eval_lerf.sh figurines 0 7000
 bash scripts/train_lerf_12gb.sh ramen 0 7000
 bash scripts/render_eval_lerf.sh ramen 0 7000
+bash scripts/train_lerf_12gb.sh teatime 0 7000
+bash scripts/render_eval_lerf.sh teatime 0 7000
 ```
