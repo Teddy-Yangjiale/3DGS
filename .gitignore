@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Environments
+.venv/
+venv/
+env/
+.conda/
+
+# Large experiment artifacts
+data/*
+outputs/*
+checkpoints/*
+logs/*
+wandb/
+runs/
+third_party/*
+
+# Keep directory docs/placeholders
+!data/README.md
+!outputs/README.md
+!checkpoints/README.md
+!logs/README.md
+!third_party/README.md
+
+# 3DGS artifacts
+*.ply
+*.splat
+*.ckpt
+*.pth
+*.pt
+*.mp4
+*.mov
+*.avi
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.vscode/
