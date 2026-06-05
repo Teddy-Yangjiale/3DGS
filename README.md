@@ -66,6 +66,7 @@ Follow the full project reproduction guide:
 - [docs/reproduction.md](docs/reproduction.md)
 - [docs/parameters.md](docs/parameters.md)
 - [docs/lerf_mask_results.md](docs/lerf_mask_results.md)
+- [docs/bottleneck_analysis.md](docs/bottleneck_analysis.md)
 - [docs/figurines_result.md](docs/figurines_result.md)
 
 ## Dataset Placement

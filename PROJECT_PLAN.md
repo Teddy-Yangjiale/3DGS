@@ -78,6 +78,7 @@ Large files stay out of Git. Git tracks scripts, configs, notes, and report file
    - Environment and commands.
    - Dataset table.
    - Segmentation results.
+   - Bottleneck analysis.
    - Editing results.
    - Custom data result.
    - Enhancement and analysis.
