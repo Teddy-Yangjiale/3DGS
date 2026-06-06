@@ -34,8 +34,8 @@ cfg_text = cfg_text.replace(
 )
 local_cfg.write_text(cfg_text)
 
-grounding_dino_py = deva / "deva/ext/grounding_dino.py"
-text = grounding_dino_py.read_text()
+ext_eval_args = deva / "deva/ext/ext_eval_args.py"
+text = ext_eval_args.read_text()
 
 replacements = {
     "GROUNDING_DINO_CONFIG_PATH": str(local_cfg),
@@ -45,15 +45,14 @@ replacements = {
 patched = text
 for name, value in replacements.items():
     patched, n = re.subn(
-        rf"^{name}\s*=\s*[\"'].*?[\"']\s*$",
-        f'{name} = "{value}"',
+        rf"(parser\.add_argument\('--{name}'\s*,\s*default=)[\"'].*?[\"']",
+        rf'\1"{value}"',
         patched,
-        flags=re.M,
     )
     if n == 0:
-        raise SystemExit(f"Could not patch {name} in {grounding_dino_py}")
+        raise SystemExit(f"Could not patch {name} in {ext_eval_args}")
 
-grounding_dino_py.write_text(patched)
+ext_eval_args.write_text(patched)
 
 tokenizer_file = deva / "Grounded-Segment-Anything/GroundingDINO/groundingdino/util/get_tokenlizer.py"
 tok_text = tokenizer_file.read_text()
@@ -69,5 +68,5 @@ print(f"GroundingDINO checkpoint: {grounding / 'groundingdino_swinb_cogcoor.pth'
 print(f"BERT path: {bert}")
 PY
 
-python -m py_compile "$DEVA_DIR/deva/ext/grounding_dino.py"
+python -m py_compile "$DEVA_DIR/deva/ext/ext_eval_args.py"
 python -m py_compile "$GROUNDINGDINO_DIR/groundingdino/util/get_tokenlizer.py"
