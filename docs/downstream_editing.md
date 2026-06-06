@@ -152,6 +152,35 @@ Artifact reduction around the apple location
 Multi-view consistency
 ```
 
+Current blocker and fix:
+
+```text
+DEVA's demo/demo_with_text.py uses its own GroundingDINO loading path. The earlier
+Gaussian Grouping offline patch fixes render_lerf_mask.py, but it does not change
+Tracking-Anything-with-DEVA/deva/ext/grounding_dino.py.
+
+Failure symptom:
+final text_encoder_type: bert-base-uncased
+requests.exceptions.ConnectionError / huggingface.co / Network is unreachable
+
+Root cause:
+The inpainting-mask stage still tries to load bert-base-uncased from HuggingFace
+instead of ~/3DGS/checkpoints/bert-base-uncased.
+
+Fix:
+Run scripts/patch_deva_inpainting_offline.sh before generating the DEVA hole mask.
+```
+
+Server command for the DEVA offline patch:
+
+```bash
+cd ~/3DGS
+bash scripts/patch_deva_inpainting_offline.sh
+```
+
+After the patch, `demo_with_text.py` should print the local BERT path, not
+`bert-base-uncased`.
+
 ## Next Editing Steps
 
 1. Inspect `concat/` frames and choose representative before/after examples.
