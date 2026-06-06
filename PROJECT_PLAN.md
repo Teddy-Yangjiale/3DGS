@@ -60,6 +60,7 @@ Large files stay out of Git. Git tracks scripts, configs, notes, and report file
 
 3. Downstream editing
    - Run object removal on at least one scene.
+   - `figurines/red apple` object removal completed as the first downstream application.
    - Attempt inpainting or multi-object editing.
    - Save before/after rendered images and videos.
 

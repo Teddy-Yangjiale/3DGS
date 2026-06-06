@@ -69,6 +69,7 @@ Follow the full project reproduction guide:
 - [docs/parameters.md](docs/parameters.md)
 - [docs/lerf_mask_results.md](docs/lerf_mask_results.md)
 - [docs/bottleneck_analysis.md](docs/bottleneck_analysis.md)
+- [docs/downstream_editing.md](docs/downstream_editing.md)
 - [docs/figurines_result.md](docs/figurines_result.md)
 
 ## Dataset Placement
@@ -126,6 +127,12 @@ Enhancement result:
 ```text
 teatime_densify1500  Mean IoU: 0.7108  Boundary IoU: 0.6768
 teatime_prompt_cookies  Mean IoU: 0.7344  Boundary IoU: 0.7145
+```
+
+Downstream editing:
+
+```text
+figurines / red apple object removal: initial run completed
 ```
 
 Working commands after environment and data setup:

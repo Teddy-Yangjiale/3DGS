@@ -212,6 +212,12 @@ Recommended first task:
 3D object removal
 ```
 
+Current status:
+
+```text
+figurines/red apple object removal completed as the first downstream result.
+```
+
 Use a strong segmentation target first:
 
 ```text
@@ -221,6 +227,15 @@ teatime: apple or bag of cookies
 ```
 
 Avoid starting with failed categories such as `spoon handle` or `wavy noodles in bowl`.
+
+Immediate follow-up:
+
+```text
+1. Generate mp4 from concat PNG frames.
+2. Select representative before/after frames.
+3. Add the object removal results to the final report.
+4. Optionally run one more removal on a second scene to strengthen the downstream section.
+```
 
 ## Phase 6: Custom Data
 
