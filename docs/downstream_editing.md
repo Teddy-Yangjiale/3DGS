@@ -7,7 +7,7 @@ This page records downstream applications built on top of segmented 3D Gaussians
 Status:
 
 ```text
-completed initial run
+completed initial run; artifacts remain visible
 ```
 
 Scene:
@@ -40,6 +40,8 @@ Config:
 
 ```text
 configs/object_removal/figurines_red_apple.json
+configs/object_removal/figurines_red_apple_thresh010.json
+configs/object_removal/figurines_red_apple_thresh005.json
 ```
 
 Expected config content:
@@ -88,10 +90,71 @@ The first run with `--skip_train` generated the edited point cloud but failed du
 
 The OpenCV warning about `DIVX` fallback is not a failure. The PNG frames were generated correctly and can be used directly or converted to mp4 with ffmpeg.
 
+Qualitative limitation:
+
+```text
+The red apple body is removed, but the deleted area still contains black holes, shadow-like artifacts, and residual background contamination.
+```
+
+Cause:
+
+```text
+Object removal deletes selected 3D Gaussians but does not reconstruct the unseen tabletop behind the apple. Some shadow/reflection/background contamination is stored in nearby Gaussians and is not removed by simply lowering the removal threshold.
+```
+
+Threshold experiments:
+
+```text
+removal_thresh = 0.3: conservative removal; visible bottom residue
+removal_thresh = 0.1: more aggressive removal; still visible artifacts
+removal_thresh = 0.05: apple is removed more aggressively, but holes/shadows remain
+```
+
+Conclusion:
+
+```text
+The result is valid as a 3D object removal demo, but clean object deletion requires 3D object inpainting.
+```
+
+## Next: Object Inpainting
+
+Goal:
+
+```text
+Fill the removed apple region with plausible tabletop appearance and reduce black holes/shadow artifacts.
+```
+
+Planned scene:
+
+```text
+LERF-MASK / figurines
+Target: red apple
+Object id: [1]
+Starting point: output/lerf/figurines
+```
+
+Expected pipeline:
+
+```text
+1. Remove selected object Gaussians.
+2. Render views with missing regions.
+3. Build inpainting masks for removed regions.
+4. Use a 2D inpainting model to generate pseudo ground-truth images.
+5. Finetune 3DGS against the inpainted pseudo images.
+6. Render final novel views.
+```
+
+Evaluation:
+
+```text
+Qualitative before/removal/inpainted comparison
+Artifact reduction around the apple location
+Multi-view consistency
+```
+
 ## Next Editing Steps
 
 1. Inspect `concat/` frames and choose representative before/after examples.
 2. Generate an mp4 from `concat/*.png`.
 3. Add selected images/video to the final report.
 4. Optionally repeat object removal for another high-IoU object, such as `ramen/pork belly` or `teatime/apple`.
-

@@ -216,6 +216,7 @@ Current status:
 
 ```text
 figurines/red apple object removal completed as the first downstream result.
+Threshold experiments show remaining holes/shadows, so the next downstream step is object inpainting.
 ```
 
 Use a strong segmentation target first:
@@ -231,10 +232,10 @@ Avoid starting with failed categories such as `spoon handle` or `wavy noodles in
 Immediate follow-up:
 
 ```text
-1. Generate mp4 from concat PNG frames.
-2. Select representative before/after frames.
-3. Add the object removal results to the final report.
-4. Optionally run one more removal on a second scene to strengthen the downstream section.
+1. Archive removal configs and notes.
+2. Keep threshold 0.05 as the most aggressive removal trial, but document remaining artifacts.
+3. Move to object inpainting for figurines/red apple.
+4. Select representative before/removal/inpainting frames for the final report.
 ```
 
 ## Phase 6: Custom Data
