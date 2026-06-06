@@ -45,7 +45,7 @@ replacements = {
 patched = text
 for name, value in replacements.items():
     patched, n = re.subn(
-        rf'^{name}\\s*=\\s*["\\\'].*?["\\\']\\s*$',
+        rf"^{name}\s*=\s*[\"'].*?[\"']\s*$",
         f'{name} = "{value}"',
         patched,
         flags=re.M,
