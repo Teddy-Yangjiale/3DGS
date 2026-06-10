@@ -348,6 +348,80 @@ The current setting stops densification at 1000 iterations to avoid OOM. This li
 
 Therefore, tuning should be done as a separate enhancement experiment, not by replacing the current baseline.
 
+## 8. Downstream Inpainting Bottlenecks
+
+The first `figurines/red apple` object inpainting run completed with:
+
+```text
+config: configs/object_inpaint/figurines_red_apple_1000_nolpips.json
+output: output/lerf/figurines/train/ours_object_inpaint/iteration_999/
+```
+
+The result shows that the target apple can be removed and the missing region can be partially filled. However, the same run also blurs or corrupts background regions and nearby objects.
+
+This reveals a different bottleneck from segmentation:
+
+```text
+The inpainting failure is caused less by object-id selection and more by unrestricted 3DGS finetuning with imperfect 2D pseudo labels.
+```
+
+### 8.1 Empty Masks
+
+The DEVA/LaMa pipeline produced a fixed number of mask files, but some files contained no white pixels. A fixed file count does not guarantee that each view has a valid target region.
+
+Reasons:
+
+```text
+1. Not every view clearly sees the removed apple hole.
+2. DEVA may not detect the black/blurry hole in every frame.
+3. Some original views are not part of the train-render set and were filled with empty masks.
+```
+
+Impact:
+
+The original `edit_object_inpaint.py` assumes every mask is non-empty and crashes when computing `mask_to_bbox`. We patched the script to skip empty-mask views.
+
+### 8.2 LPIPS Memory And Patch-Size Issues
+
+The original inpainting script computes LPIPS even when the configured weight is zero. On the 12GB TITAN V, this adds unnecessary VGG memory cost. Thin masks can also produce small bounding boxes, causing VGG pooling to fail.
+
+Mitigation for the first stable run:
+
+```text
+lambda_dlpips: 0.0
+LPIPS initialization disabled
+lpips_loss set to zero
+```
+
+This makes the first run stable but also means the loss is L1-only, which can increase blur.
+
+### 8.3 Multi-View Inconsistency
+
+LaMa is a 2D image inpainting method. It repairs each rendered frame independently and does not enforce multi-view consistency. When the 3DGS model is finetuned against these frame-wise pseudo labels, it tries to fit inconsistent target appearances across views.
+
+Impact:
+
+```text
+1. The removed region may become less black.
+2. The surrounding tabletop may become blurry.
+3. Nearby objects and background may degrade.
+```
+
+### 8.4 Full-Scene Finetuning
+
+The most important inpainting bottleneck is the optimization scope. The first successful run still updates the 3DGS scene too broadly. Since the pseudo labels are imperfect, unrelated Gaussians can receive harmful gradients and the background can be damaged.
+
+Recommended fix:
+
+```text
+Use localized masked finetuning:
+1. compute loss only inside the inpainting mask or expanded local bbox,
+2. preserve the original RGB outside the target area,
+3. optionally freeze non-target Gaussians or restrict trainable parameters.
+```
+
+This should be treated as the next method enhancement because it directly addresses the observed degradation rather than only changing iteration count.
+
 Recommended tuning target:
 
 ```text

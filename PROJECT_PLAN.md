@@ -61,7 +61,9 @@ Large files stay out of Git. Git tracks scripts, configs, notes, and report file
 3. Downstream editing
    - Run object removal on at least one scene.
    - `figurines/red apple` object removal completed as the first downstream application.
-   - Object removal leaves holes/shadows; next step is `figurines/red apple` object inpainting.
+   - Object removal leaves holes/shadows.
+   - `figurines/red apple` object inpainting completed as a first L1-only run.
+   - Current inpainting removes the apple but degrades background and nearby objects, so the next improvement is localized masked finetuning.
    - Save before/after rendered images and videos.
 
 4. Custom data validation
@@ -84,8 +86,9 @@ Large files stay out of Git. Git tracks scripts, configs, notes, and report file
 3. Export and inspect weak-category masks for `spoon handle`, `cookies on a plate`, `wavy noodles in bowl`, and `rubber duck with red hat`.
 4. If weak masks are empty or target the wrong object, run prompt/mask tuning instead of more densification.
 5. If weak masks are qualitatively correct but boundaries are rough, try `densify2000_7000` as a separate experiment.
-6. Start downstream editing with a strong object class, not a failure class.
-7. Begin custom-data validation after public-data reproduction and one editing demo are stable.
+6. Archive the completed `figurines/red apple` object removal and first inpainting outputs.
+7. Improve inpainting with localized masked loss before running longer finetuning.
+8. Begin custom-data validation after public-data reproduction and the editing demo are documented.
 
 6. Report
    - Environment and commands.

@@ -216,7 +216,9 @@ Current status:
 
 ```text
 figurines/red apple object removal completed as the first downstream result.
-Threshold experiments show remaining holes/shadows, so the next downstream step is object inpainting.
+Threshold experiments show remaining holes/shadows.
+figurines/red apple object inpainting 1000_nolpips completed.
+The first inpainting run removes the apple but damages background and nearby objects.
 ```
 
 Use a strong segmentation target first:
@@ -232,10 +234,37 @@ Avoid starting with failed categories such as `spoon handle` or `wavy noodles in
 Immediate follow-up:
 
 ```text
-1. Archive removal configs and notes.
-2. Keep threshold 0.05 as the most aggressive removal trial, but document remaining artifacts.
-3. Move to object inpainting for figurines/red apple.
-4. Select representative before/removal/inpainting frames for the final report.
+1. Export representative before/removal/inpainting frames.
+2. Document the first inpainting run as pipeline success with quality limitations.
+3. Do not increase finetune iterations until background degradation is addressed.
+4. Implement localized masked loss or frozen-background optimization.
+5. Rerun inpainting only after the loss is localized.
+```
+
+Current inpainting output:
+
+```text
+output/lerf/figurines/train/ours_object_inpaint/iteration_999/
+```
+
+Required patch before rerunning inpainting from a clean third-party checkout:
+
+```bash
+cd ~/3DGS
+bash scripts/patch_gaussian_grouping_inpaint_12gb.sh
+```
+
+Recommended next experiment:
+
+```text
+figurines_red_apple_1000_masked_l1
+```
+
+Goal:
+
+```text
+Compute the reconstruction loss only in the inpainting mask or an expanded local bbox
+so that unrelated background and objects are preserved.
 ```
 
 ## Phase 6: Custom Data
@@ -258,6 +287,10 @@ Pipeline:
 capture images
 run COLMAP preprocessing
 generate masks
+train Gaussian Grouping
+run segmentation evaluation or qualitative mask inspection
+run one simple editing task if time permits
+```
 train Gaussian Grouping
 render object masks
 attempt object removal

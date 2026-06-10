@@ -116,7 +116,7 @@ Conclusion:
 The result is valid as a 3D object removal demo, but clean object deletion requires 3D object inpainting.
 ```
 
-## Next: Object Inpainting
+## Object Inpainting: Figurines Red Apple
 
 Goal:
 
@@ -124,7 +124,7 @@ Goal:
 Fill the removed apple region with plausible tabletop appearance and reduce black holes/shadow artifacts.
 ```
 
-Planned scene:
+Scene:
 
 ```text
 LERF-MASK / figurines
@@ -133,7 +133,7 @@ Object id: [1]
 Starting point: output/lerf/figurines
 ```
 
-Expected pipeline:
+Pipeline:
 
 ```text
 1. Remove selected object Gaussians.
@@ -152,12 +152,65 @@ Artifact reduction around the apple location
 Multi-view consistency
 ```
 
-Current blocker and fix:
+Completed run:
+
+```text
+Config: configs/object_inpaint/figurines_red_apple_1000_nolpips.json
+Finetune iterations: 1000
+LPIPS: disabled
+Output iteration: 999
+Status: completed
+```
+
+Output:
+
+```text
+output/lerf/figurines/point_cloud_object_inpaint/iteration_999/point_cloud.ply
+output/lerf/figurines/train/ours_object_inpaint/iteration_999/renders/
+output/lerf/figurines/train/ours_object_inpaint/iteration_999/concat/
+```
+
+Qualitative result:
+
+```text
+The red apple is removed and the hole is partially filled, but the inpainted result
+also blurs or damages background regions and nearby objects.
+```
+
+Interpretation:
+
+```text
+The inpainting pipeline is functional, but naive full-scene finetuning with
+frame-wise LaMa pseudo labels is too destructive. The next improvement should
+localize the loss/optimization to the inpainting region instead of simply
+increasing iterations.
+```
+
+Engineering fixes used:
+
+```text
+1. DEVA offline loading patch for local GroundingDINO/BERT.
+2. supervision annotation API compatibility patch.
+3. pseudo-label filename alignment from 00000.png to frame_*.jpg.
+4. compatible mask naming: frame_*.png and frame_*.jpg.png.
+5. skip empty inpainting masks in edit_object_inpaint.py.
+6. disable LPIPS for the 12GB low-memory run.
+```
+
+The `edit_object_inpaint.py` fixes can be reapplied with:
+
+```bash
+cd ~/3DGS
+bash scripts/patch_gaussian_grouping_inpaint_12gb.sh
+```
+
+Earlier blocker and fix:
 
 ```text
 DEVA's demo/demo_with_text.py uses its own GroundingDINO loading path. The earlier
-Gaussian Grouping offline patch fixes render_lerf_mask.py, but it does not change
-Tracking-Anything-with-DEVA/deva/ext/grounding_dino.py.
+Gaussian Grouping offline patch fixes render_lerf_mask.py, but the DEVA path
+also needs Tracking-Anything-with-DEVA/deva/ext/ext_eval_args.py to point to
+local GroundingDINO and BERT files.
 
 Failure symptom:
 final text_encoder_type: bert-base-uncased
@@ -183,7 +236,8 @@ After the patch, `demo_with_text.py` should print the local BERT path, not
 
 ## Next Editing Steps
 
-1. Inspect `concat/` frames and choose representative before/after examples.
-2. Generate an mp4 from `concat/*.png`.
-3. Add selected images/video to the final report.
-4. Optionally repeat object removal for another high-IoU object, such as `ramen/pork belly` or `teatime/apple`.
+1. Export representative removal and inpainting `concat/` frames.
+2. Compare original/removal/inpainting qualitatively.
+3. Record the first inpainting run as a successful pipeline but limited-quality result.
+4. Implement localized masked finetuning to reduce background degradation.
+5. Optionally repeat object removal for another high-IoU object, such as `ramen/pork belly` or `teatime/apple`.

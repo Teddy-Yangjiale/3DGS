@@ -70,6 +70,7 @@ Follow the full project reproduction guide:
 - [docs/lerf_mask_results.md](docs/lerf_mask_results.md)
 - [docs/bottleneck_analysis.md](docs/bottleneck_analysis.md)
 - [docs/downstream_editing.md](docs/downstream_editing.md)
+- [docs/inpainting_result.md](docs/inpainting_result.md)
 - [docs/figurines_result.md](docs/figurines_result.md)
 
 ## Dataset Placement
@@ -133,6 +134,7 @@ Downstream editing:
 
 ```text
 figurines / red apple object removal: initial run completed
+figurines / red apple object inpainting: first L1-only run completed; background degradation observed
 ```
 
 Working commands after environment and data setup:
