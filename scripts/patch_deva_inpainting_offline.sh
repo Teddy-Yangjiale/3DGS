@@ -62,6 +62,18 @@ tok_text = tok_text.replace(
 )
 tokenizer_file.write_text(tok_text)
 
+result_utils = deva / "deva/inference/result_utils.py"
+res_text = result_utils.read_text()
+res_patched = re.sub(
+    r"(annotator\.annotate\(\s*scene=blend,\s*detections=detections),\s*labels=labels\s*\)",
+    r"\1)",
+    res_text,
+    flags=re.S,
+)
+if res_patched == res_text and "labels=labels" in res_text:
+    raise SystemExit(f"Could not patch supervision labels API in {result_utils}")
+result_utils.write_text(res_patched)
+
 print("DEVA offline inpainting patch applied.")
 print(f"GroundingDINO config: {local_cfg}")
 print(f"GroundingDINO checkpoint: {grounding / 'groundingdino_swinb_cogcoor.pth'}")
@@ -70,3 +82,4 @@ PY
 
 python -m py_compile "$DEVA_DIR/deva/ext/ext_eval_args.py"
 python -m py_compile "$GROUNDINGDINO_DIR/groundingdino/util/get_tokenlizer.py"
+python -m py_compile "$DEVA_DIR/deva/inference/result_utils.py"
